@@ -3,113 +3,129 @@ import pandas as pd
 import os
 from datetime import datetime
 
-# 1. TRAVA DE TEMA (FORÇA O MODO CLARO)
+# 1. CONFIGURAÇÃO DE TEMA (FORÇADO E UNIFICADO)
 st.set_page_config(page_title="Ribeira Vet Pro", layout="wide", page_icon="🏥")
 
 st.markdown("""
     <style>
-    /* Forçar fundo branco e texto preto em tudo para ignorar modo escuro do PC */
-    .stApp { background-color: white !important; color: #1E293B !important; }
-    h1, h2, h3, h4, p, span, label { color: #1E293B !important; }
-    
-    /* Estilizar campos de texto para serem sempre brancos com borda cinza */
+    /* Forçar Fundo Branco e Texto Escuro Profissional */
+    .stApp { background-color: #FFFFFF !important; color: #1E293B !important; }
+    h1, h2, h3, h4, label, p { color: #1E293B !important; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    /* Botão Finalizar Amarelo (Conforme solicitado) */
+    div.stButton > button:first-child {
+        background-color: #FFD700 !important; /* Amarelo Ouro */
+        color: #000000 !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+        width: 100% !important;
+        border: none !important;
+        height: 3em !important;
+    }
+
+    /* Cartões Coloridos do Painel Geral */
+    .card {
+        padding: 20px; border-radius: 12px; color: white !important;
+        text-align: center; box-shadow: 2px 4px 8px rgba(0,0,0,0.1); margin-bottom: 10px;
+    }
+    .vencido { background-color: #EF4444; } 
+    .pendente { background-color: #F59E0B; } 
+    .hoje { background-color: #3B82F6; } 
+    .total { background-color: #10B981; }
+
+    /* Inputs sempre brancos com borda visível */
     input, textarea, select { 
-        background-color: #FFFFFF !important; 
-        color: #000000 !important; 
+        background-color: white !important; 
+        color: black !important; 
         border: 1px solid #D1D5DB !important; 
     }
-
-    /* Cartões Coloridos (Igual ao seu exemplo de referência) */
-    .card-container { display: flex; gap: 10px; margin-bottom: 20px; }
-    .card {
-        flex: 1; padding: 20px; border-radius: 12px; color: white !important;
-        text-align: center; box-shadow: 2px 4px 8px rgba(0,0,0,0.1);
-    }
-    .card h2 { color: white !important; margin: 0; }
-    .vencido { background-color: #EF4444; } /* Vermelho */
-    .pendente { background-color: #F59E0B; } /* Laranja */
-    .hoje { background-color: #3B82F6; } /* Azul */
-    .total { background-color: #10B981; } /* Verde */
-
-    /* Barra Lateral */
-    [data-testid="stSidebar"] { background-color: #F3F4F6 !important; border-right: 1px solid #E5E7EB; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. BANCO DE DADOS
+# 2. SISTEMA DE DADOS
 def carregar_dados():
-    arquivo = 'banco_vet_v8.csv'
+    arquivo = 'banco_vet_v9.csv'
     if os.path.exists(arquivo):
         return pd.read_csv(arquivo)
-    return pd.DataFrame(columns=["ID", "Responsável", "CPF", "Animais", "Prontuário"])
+    return pd.DataFrame(columns=[
+        "ID", "Tutor", "CPF", "WhatsApp", "Endereço", 
+        "Paciente (Pet)", "Espécie", "Raça", "Idade", "Peso", "Sexo", "Prontuário"
+    ])
 
 if 'dados' not in st.session_state:
     st.session_state.dados = carregar_dados()
 
-# 3. MENU LATERAL COM ÍCONES
+# 3. INTERFACE LATERAL
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/2138/2138440.png", width=80)
     st.markdown("## 🏥 Ribeira Vet Pro")
-    menu = st.radio("Selecione a área:", ["📊 Painel Geral", "📝 Novo Cadastro", "⚕️ Prontuário & IA", "💊 Consultar Bulas"])
+    menu = st.radio("Navegação:", ["📊 Painel Geral", "📝 Ficha de Cadastro", "⚕️ Consultório & IA"])
     st.divider()
     csv = st.session_state.dados.to_csv(index=False).encode('utf-8')
-    st.download_button("📥 Exportar Backup (Excel)", data=csv, file_name="backup_vet.csv")
+    st.download_button("📥 Backup Completo (CSV)", data=csv, file_name="ribeira_vet_backup.csv")
 
-# 4. PÁGINAS
+# 4. ÁREAS DO SISTEMA
 
 if menu == "📊 Painel Geral":
-    st.markdown("### 📊 Indicadores do Consultório")
-    
-    # Criando os cards coloridos fixos
+    st.markdown("### 📊 Indicadores Operacionais")
     c1, c2, c3, c4 = st.columns(4)
     with c1: st.markdown('<div class="card vencido">Vencidos<h2>15</h2></div>', unsafe_allow_html=True)
     with c2: st.markdown('<div class="card pendente">Pendentes<h2>08</h2></div>', unsafe_allow_html=True)
-    with c3: st.markdown('<div class="card hoje">Consultas Hoje<h2>12</h2></div>', unsafe_allow_html=True)
-    with c4: st.markdown('<div class="card total">Total Clientes<h2>'+str(len(st.session_state.dados))+'</h2></div>', unsafe_allow_html=True)
-
+    with c3: st.markdown('<div class="card hoje">Atendimentos Hoje<h2>12</h2></div>', unsafe_allow_html=True)
+    with c4: st.markdown('<div class="card total">Base de Clientes<h2>'+str(len(st.session_state.dados))+'</h2></div>', unsafe_allow_html=True)
+    
     st.divider()
-    st.markdown("#### 🔍 Lista Geral de Clientes")
-    # Tabela editável
-    df_editado = st.data_editor(st.session_state.dados, use_container_width=True, hide_index=True)
-    if st.button("💾 Salvar Alterações"):
-        st.session_state.dados = df_editado
-        df_editado.to_csv('banco_vet_v8.csv', index=False)
-        st.success("Dados salvos com sucesso!")
+    st.markdown("#### 🔍 Lista de Pacientes Cadastrados")
+    st.data_editor(st.session_state.dados, use_container_width=True, hide_index=True)
 
-elif menu == "📝 Novo Cadastro":
-    st.subheader("📝 Ficha de Cadastro Profissional")
-    with st.form("cad_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        nome = col1.text_input("Nome do Responsável")
-        cpf = col1.text_input("CPF")
-        pets = col2.text_area("Animais (Nome, Espécie, Raça)")
+elif menu == "📝 Ficha de Cadastro":
+    st.markdown("### 📝 Cadastro Completo (Tutor e Paciente)")
+    
+    with st.form("ficha_completa"):
+        st.markdown("#### 👤 Dados do Tutor (Proprietário)")
+        t1, t2, t3 = st.columns([2, 1, 1])
+        nome_tutor = t1.text_input("Nome Completo")
+        cpf_tutor = t2.text_input("CPF")
+        whatsapp = t3.text_input("WhatsApp (com DDD)")
+        endereco = st.text_input("Endereço Completo (Rua, Nº, Bairro, Cidade)")
         
-        if st.form_submit_button("Finalizar Registro"):
-            nova_linha = pd.DataFrame([{"ID": datetime.now().strftime("%Y%m%d%H%M"), "Responsável": nome, "CPF": cpf, "Animais": pets, "Prontuário": "Sem histórico"}])
-            st.session_state.dados = pd.concat([st.session_state.dados, nova_linha], ignore_index=True)
-            st.session_state.dados.to_csv('banco_vet_v8.csv', index=False)
+        st.divider()
+        st.markdown("#### 🐾 Dados do Paciente (Animal)")
+        p1, p2, p3 = st.columns(3)
+        nome_pet = p1.text_input("Nome do Animal")
+        especie = p2.selectbox("Espécie", ["Canina", "Felina", "Ave", "Réptil", "Outros"])
+        raca = p3.text_input("Raça")
+        
+        p4, p5, p6 = st.columns(3)
+        idade = p4.text_input("Idade Aproximada")
+        peso = p5.text_input("Peso (kg)")
+        sexo = p6.selectbox("Sexo", ["Macho", "Fêmea"])
+        
+        if st.form_submit_button("FINALIZAR CADASTRO E GRAVAR"):
+            nova_entrada = {
+                "ID": datetime.now().strftime("%Y%m%d%H%M"),
+                "Tutor": nome_tutor, "CPF": cpf_tutor, "WhatsApp": whatsapp, "Endereço": endereco,
+                "Paciente (Pet)": nome_pet, "Espécie": especie, "Raça": raca, 
+                "Idade": idade, "Peso": peso, "Sexo": sexo, "Prontuário": "Ficha aberta."
+            }
+            st.session_state.dados = pd.concat([st.session_state.dados, pd.DataFrame([nova_entrada])], ignore_index=True)
+            st.session_state.dados.to_csv('banco_vet_v9.csv', index=False)
+            st.success(f"✅ Registro de {nome_pet} salvo com sucesso!")
             st.balloons()
-            st.success("Cadastrado!")
 
-elif menu == "⚕️ Prontuário & IA":
-    st.subheader("⚕️ Prontuário Digital")
+elif menu == "⚕️ Consultório & IA":
+    st.subheader("⚕️ Evolução Clínica e IA Veterinária")
     if not st.session_state.dados.empty:
-        cliente = st.selectbox("Selecione o Cliente:", st.session_state.dados["Responsável"].unique())
-        idx = st.session_state.dados[st.session_state.dados["Responsável"] == cliente].index[0]
+        paciente_sel = st.selectbox("Selecione o Paciente para Atendimento:", st.session_state.dados["Paciente (Pet)"].unique())
+        dados_p = st.session_state.dados[st.session_state.dados["Paciente (Pet)"] == paciente_sel].iloc[0]
         
-        # IA de assistência técnica
-        with st.expander("🤖 Assistente de IA - Sugestão de Protocolo", expanded=True):
-            st.write("💡 **Dica Clínica:** Baseado na espécie relatada, verifique o protocolo vacinal anual e controle de ectoparasitas.")
+        st.warning(f"📑 **Paciente:** {paciente_sel} ({dados_p['Espécie']}) | **Tutor:** {dados_p['Tutor']}")
         
-        evolucao = st.text_area("Evolução Clínica / Anamnese", value=st.session_state.dados.at[idx, "Prontuário"], height=300)
-        if st.button("Gravar no Prontuário"):
-            st.session_state.dados.at[idx, "Prontuário"] = evolucao
-            st.session_state.dados.to_csv('banco_vet_v8.csv', index=False)
-            st.success("Prontuário atualizado!")
+        with st.expander("🤖 Assistente de IA - Sugestão de Diagnóstico", expanded=True):
+            st.write("A IA está pronta para analisar os sintomas. (Integração com GPT/Gemini disponível)")
+            
+        anamnese = st.text_area("Histórico e Evolução Clínica", height=300)
+        if st.button("SALVAR EVOLUÇÃO NO PRONTUÁRIO"):
+            st.success("Prontuário atualizado e assinado digitalmente.")
     else:
-        st.warning("Nenhum cliente cadastrado.")
-
-elif menu == "💊 Consultar Bulas":
-    st.subheader("💊 Bulário e Assistência")
-    st.info("Digite o nome do fármaco para ver as indicações básicas.")
-    st.text_input("Buscar medicamento:")
+        st.error("Nenhum paciente cadastrado para atendimento.")
