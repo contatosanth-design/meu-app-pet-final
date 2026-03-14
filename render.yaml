@@ -1,12 +1,11 @@
-# Exported from Render on 2026-03-06T11:40:19Z
-version: "1"
 services:
-- type: web
-  name: vet-santh-2026
-  runtime: python
-  repo: https://github.com/contatosanth-design/meu-app-pet-final
-  plan: free
-  region: oregon
-  buildCommand: pip install -r requirements.txt
-  startCommand: streamlit run app.py
-  autoDeployTrigger: commit
+  - type: web
+    name: meu-app-pet-final
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: streamlit run app_novo.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.18
